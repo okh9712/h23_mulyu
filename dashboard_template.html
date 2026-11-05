@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>H23 층/동간 물동량 예측 대시보드</title>
+<style>
+:root{--bg:#f4f6fa;--card:#fff;--ink:#1b2430;--mute:#5d6b7e;--line:#dfe5ee;--brand:#1f3a5f;--blue:#2563eb;
+--ok:#15803d;--okbg:#e3f5e8;--warn:#b45309;--warnbg:#fdf0d5;--bad:#c2262e;--badbg:#fde6e7}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 "Malgun Gothic","Apple SD Gothic Neo","Segoe UI",sans-serif}
+header{background:var(--brand);color:#fff;padding:18px 24px 0}
+.hwrap{max-width:1320px;margin:0 auto}
+h1{margin:0;font-size:22px}
+.sub{opacity:.8;font-size:13px;margin-top:2px}
+.dummy{display:inline-block;background:#f59e0b;color:#1b2430;font-size:11px;font-weight:700;padding:1px 8px;border-radius:10px;margin-left:8px;vertical-align:middle}
+nav{display:flex;flex-wrap:wrap;gap:2px;margin-top:12px}
+nav a{color:#cfdcf0;text-decoration:none;padding:8px 12px;font-size:13px;border-radius:6px 6px 0 0}
+nav a:hover{background:rgba(255,255,255,.14);color:#fff}
+main{max-width:1320px;margin:0 auto;padding:18px 16px 60px}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-bottom:18px}
+section h2{margin:0 0 4px;font-size:17px;color:var(--brand)}
+section h2 span.no{display:inline-block;background:var(--brand);color:#fff;border-radius:4px;font-size:12px;padding:0 7px;margin-right:8px}
+.desc{color:var(--mute);font-size:12.5px;margin:0 0 12px}
+.row{display:flex;flex-wrap:wrap;gap:14px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:14px}
+.card{border:1px solid var(--line);border-radius:8px;padding:12px 14px;background:#fff}
+.card h3{margin:0 0 6px;font-size:14px}
+.ctl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
+.ctl label{font-size:12.5px;color:var(--mute)}
+select,input[type=number],button,.btn{font:inherit;font-size:13px;padding:5px 9px;border:1px solid #c5cedb;border-radius:6px;background:#fff;color:var(--ink)}
+button,.btn{cursor:pointer;background:var(--brand);color:#fff;border-color:var(--brand);text-decoration:none;display:inline-block}
+button.ghost,.btn.ghost{background:#fff;color:var(--brand)}
+button:hover,.btn:hover{filter:brightness(1.12)}
+.tabs button{background:#fff;color:var(--ink);border-color:#c5cedb}
+.tabs button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+.ch{position:relative;height:320px}.ch.sm{height:230px}.ch.lg{height:380px}
+.badge{display:inline-block;padding:1px 9px;border-radius:10px;font-size:12px;font-weight:700}
+.b-ok{background:var(--okbg);color:var(--ok)}.b-warn{background:var(--warnbg);color:var(--warn)}.b-bad{background:var(--badbg);color:var(--bad)}
+.alert{border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:14px}
+.alert.bad{background:var(--badbg);border:1px solid #f1b0b4;color:#7d151b}
+.alert.ok{background:var(--okbg);border:1px solid #a8dcb6;color:#14532d}
+.alert ul{margin:6px 0 0 18px;padding:0}
+.cards5{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:14px}
+.seg{border:1px solid var(--line);border-left-width:5px;border-radius:8px;padding:10px 12px}
+.seg.ok{border-left-color:#16a34a}.seg.warn{border-left-color:#d97706}.seg.bad{border-left-color:#dc2626}
+.seg .t{font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.seg .big{font-size:26px;font-weight:700;margin:2px 0}
+.seg .kv{font-size:12px;color:var(--mute);display:flex;justify-content:space-between}
+.seg .kv b{color:var(--ink)}
+.bar{height:6px;background:#e8edf4;border-radius:4px;margin:6px 0 8px;overflow:hidden}.bar i{display:block;height:100%}
+.hm{border-collapse:collapse;font-size:11px;width:100%}
+.hm th,.hm td{border:1px solid #fff;text-align:center;padding:3px 2px;min-width:34px}
+.hm th{background:#eef2f8;font-weight:600;color:#33415a}
+.hm td.nm{text-align:left;padding:3px 8px;white-space:nowrap;background:#eef2f8;font-weight:600;font-size:12px}
+.hm th.fc{background:#dbe7fb}
+.scroll{overflow:auto}
+.legend{display:flex;gap:12px;font-size:12px;color:var(--mute);margin-top:8px;flex-wrap:wrap}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-2px;margin-right:4px}
+table.t{border-collapse:collapse;width:100%;font-size:12.5px}
+table.t th,table.t td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:right;white-space:nowrap}
+table.t th{background:#eef2f8;position:sticky;top:0;text-align:center}
+table.t td.l,table.t th.l{text-align:left}
+table.t tr.sel td{background:#eef6ff}
+.mx td{width:12.5%;padding:10px 6px;text-align:center;border:2px solid #fff;font-weight:600}
+.mx th{padding:8px;background:#eef2f8;border:2px solid #fff}
+.note{font-size:12px;color:var(--mute)}
+.up{border:2px dashed #b6c3d6;border-radius:8px;padding:12px;background:#fafcff}
+.up .st{font-size:12.5px;margin-top:6px}
+.pill{display:inline-block;background:#eef2f8;border-radius:10px;padding:1px 9px;font-size:12px;margin-right:6px}
+.kpi{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0}
+.kpi div{flex:1;min-width:150px;border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.kpi b{display:block;font-size:24px}
+.kpi span{font-size:12px;color:var(--mute)}
+footer{text-align:center;color:var(--mute);font-size:12px;padding:20px}
+</style>
+</head>
+<body>
+<header><div class="hwrap">
+  <h1>H23 단지 층/동간 물동량 예측 대시보드 <span class="dummy">DUMMY DATA</span></h1>
+  <div class="sub">26.1~26.10 이력 기반 ML 학습 → 27.1~28.12 중장기 생산계획 입력 시 Bridge/Lifter 물동량·부하율 예측 및 MAX CAPA 초과 시점 경고</div>
+  <nav>
+    <a href="#s0">0 FAB 구조</a><a href="#s1">1·2 데이터 입력</a><a href="#s3">3 생산계획/재공</a><a href="#s4">4 예측 Summary</a>
+    <a href="#s5">5 물동량</a><a href="#s6">6 방향별</a><a href="#s7">7 Matrix</a><a href="#s8">8 부하율</a><a href="#s9">9 Raw Data</a><a href="#s10">ML 모델 성능</a>
+  </nav>
+</div></header>
+<main>
+
+<section id="s0">
+  <h2><span class="no">0</span>15/16/17L FAB 구조 (Bridge / Lifter)</h2>
+  <p class="desc">16L – 15L – 17L 순으로 동(Line)이 배치되고, 각 라인은 상부층/하부층으로 구성됩니다. 동간 이동은 Bridge, 층간 이동은 Lifter. 색상은 예측기간(27~28년) 최대 부하율 기준 상태입니다.</p>
+  <div class="scroll"><svg id="fab" viewBox="0 0 960 330" width="100%" style="max-width:1000px;min-width:760px;display:block;margin:auto" font-family="Malgun Gothic,sans-serif"></svg></div>
+</section>
+
+<section id="s1">
+  <h2><span class="no">1·2</span>이력 데이터 / 중장기 생산계획 입력 (Excel 업로드)</h2>
+  <p class="desc">기본값은 PoC용 더미 데이터입니다. 생산계획이 변경되면 엑셀의 <b>월별_생산계획</b> 시트를 수정해 업로드하세요. 업로드한 계획은 브라우저에서 즉시 재예측(Ridge 선형모델)됩니다.</p>
+  <div class="grid2">
+    <div class="up"><b>① 26.1~26.10 이력 데이터</b> <span class="note">(시트: 일별_생산계획_WIP, 일별_물동량)</span><br>
+      <input type="file" id="fHist" accept=".xlsx,.xls" style="margin-top:8px"> <a class="btn ghost" href="data/H23_이력데이터_2026.01-10.xlsx" download>샘플 Excel</a>
+      <div class="st" id="stHist"></div></div>
+    <div class="up"><b>② 27.1~28.12 중장기 생산계획</b> <span class="note">(시트: 월별_생산계획 / 년월·라인·제품·생산계획(Lot))</span><br>
+      <input type="file" id="fPlan" accept=".xlsx,.xls" style="margin-top:8px"> <a class="btn ghost" href="data/H23_중장기생산계획_2027.01-2028.12.xlsx" download>샘플 Excel</a>
+      <div class="st" id="stPlan"></div></div>
+  </div>
+  <div class="ctl" style="margin-top:12px">
+    <label>피크 계수 <input type="number" id="peak" value="1.00" min="0.5" max="2" step="0.05" style="width:70px"></label>
+    <span class="note">부하율 = 월 평균 Lot/Hr × 피크 계수 ÷ MAX CAPA (1.00 = 월평균 기준, 시간대 편차를 보려면 1.1~1.3 등으로 조정)</span>
+    <button class="ghost" id="reset" style="color:var(--brand)">기본(더미) 데이터로 복원</button>
+  </div>
+  <div id="engineNote" class="note"></div>
+</section>
+
+<section id="s3">
+  <h2><span class="no">3</span>각 Line별 생산계획 / 재공(WIP) 현황</h2>
+  <p class="desc">월별 제품별 생산계획(막대, Lot)과 평균 재공(선, Lot). 27년 이후 재공은 이력의 재공/계획 비율로 추정한 값입니다.</p>
+  <div class="ctl tabs" id="lineTabs"></div>
+  <div class="ch lg"><canvas id="cPlan"></canvas></div>
+</section>
+
+<section id="s4">
+  <h2><span class="no">4</span>예측값 Summary — MAX CAPA 초과 시점</h2>
+  <div id="alert"></div>
+  <div class="cards5" id="segCards"></div>
+  <h3 style="margin:14px 0 6px;font-size:14px">구간별 월간 부하율 히트맵 (이력 + 예측)</h3>
+  <div class="scroll"><table class="hm" id="heat"></table></div>
+  <div class="legend"><span><i style="background:#e6f0fb"></i>~70%</span><span><i style="background:#bcd6f5"></i>70~80%</span><span><i style="background:#fbe39b"></i>80~90%</span><span><i style="background:#f6a25a"></i>90~100% (주의)</span><span><i style="background:#e5484d"></i>100%↑ (MAX CAPA 초과)</span></div>
+</section>
+
+<section id="s5">
+  <h2><span class="no">5</span>Bridge / Lifter 물동량 (Lot/Hr, 월평균)</h2>
+  <p class="desc">실선: 이력(26년), 점선: 예측(27~28년). 빨간 점선은 MAX CAPA.</p>
+  <div class="grid2" id="flowCharts"></div>
+</section>
+
+<section id="s6">
+  <h2><span class="no">6</span>Bridge / Lifter 방향별 물동량</h2>
+  <div class="ctl"><label>구간 <select id="dirSeg"></select></label>
+    <label>구분 <select id="dirGrp"><option value="dir">방향별</option><option value="dirfloor">방향 × 층별</option></select></label>
+    <label>단위 <select id="dirUnit"><option value="hr">Lot/Hr</option><option value="mon">Lot/월</option></select></label></div>
+  <div class="ch lg"><canvas id="cDir"></canvas></div>
+</section>
+
+<section id="s7">
+  <h2><span class="no">7</span>라인/층별 물동량 Matrix (FROM → TO)</h2>
+  <p class="desc">행 = 출발(FROM), 열 = 도착(TO). 같은 라인 내 상·하부 이동 = Lifter, 라인 간 동일 층 이동 = Bridge.</p>
+  <div class="ctl"><label>기간 <select id="mxA"></select> ~ <select id="mxB"></select></label>
+    <label>단위 <select id="mxUnit"><option value="hr">평균 Lot/Hr</option><option value="tot">기간 합계 Lot</option></select></label></div>
+  <div class="scroll"><table class="mx" id="mx" style="width:100%;border-collapse:collapse"></table></div>
+  <div class="note" id="mxNote" style="margin-top:8px"></div>
+</section>
+
+<section id="s8">
+  <h2><span class="no">8</span>Bridge / Lifter 부하율</h2>
+  <p class="desc">부하율 = 월 평균 Lot/Hr × 피크계수 ÷ MAX CAPA. 100% 초과 시 병목 발생 우려.</p>
+  <div class="ch lg"><canvas id="cUtil"></canvas></div>
+</section>
+
+<section id="s9">
+  <h2><span class="no">9</span>Raw Data (구간별 / 기간별 / 라인별, Excel 다운로드)</h2>
+  <div class="ctl">
+    <label>데이터 <select id="rwSet"><option value="flow">물동량</option><option value="plan">생산계획·재공</option></select></label>
+    <label>구분 <select id="rwSrc"><option value="">이력+예측</option><option value="actual">이력</option><option value="forecast">예측</option></select></label>
+    <label id="rwSegL">구간 <select id="rwSeg"></select></label>
+    <label id="rwLineL" style="display:none">라인 <select id="rwLine"></select></label>
+    <label>기간 <select id="rwA"></select> ~ <select id="rwB"></select></label>
+    <button id="rwDl">Excel 다운로드</button>
+    <span class="note" id="rwCnt"></span>
+  </div>
+  <div class="scroll" style="max-height:360px;border:1px solid var(--line);border-radius:6px"><table class="t" id="rwT"></table></div>
+</section>
+
+<section id="s10">
+  <h2><span class="no">★</span>예측에 활용한 ML 모델 및 성능 요약</h2>
+  <div id="mlSummary"></div>
+</section>
+</main>
+<footer>H23 단지 층/동간 물동량 예측 PoC · 모든 데이터는 PoC 시연용 더미 데이터이며 실제 값이 아닙니다.</footer>
+
+<script>/*__CHARTJS__*/</script>
+<script>/*__XLSX__*/</script>
+<script>const DATA = /*__DATA__*/;</script>
+<script>
+"use strict";
+const D = DATA, SEGS = D.segments, FLOWS = D.flows, PRODUCTS = D.products, LINES = D.lines;
+const COLS = FLOWS.map(f => f.col);
+const FEATS = D.ridge.feats;
+const fmt = n => Math.round(n).toLocaleString('ko-KR');
+const pct = n => (n * 100).toFixed(1) + '%';
+const daysIn = ym => new Date(+ym.slice(0, 4), +ym.slice(5, 7), 0).getDate();
+const $ = id => document.getElementById(id);
+const PCOL = ['#2563eb', '#0891b2', '#16a34a', '#d97706', '#9333ea'];
+const SCOL = {B1516: '#2563eb', B1517: '#0891b2', L15: '#d97706', L16: '#9333ea', L17: '#16a34a'};
+
+/* ---------------- 상태 ---------------- */
+let S;   // {flow: Map ym->{col:lots}, src: Map ym->'actual'|'forecast', plan: [], months: [], peak, engine}
+function initState() {
+  const flow = new Map(), src = new Map();
+  D.flow_rows.forEach(([ym, col, v, s]) => { if (!flow.has(ym)) flow.set(ym, {}); flow.get(ym)[col] = v; src.set(ym, s); });
+  const plan = D.plan_rows.map(([ym, line, prod, p, w, s]) => ({ym, line, prod, plan: p, wip: w, src: s}));
+  S = {flow, src, plan, peak: +$('peak').value || 1, engine: 'ensemble', hist: '기본(더미) 데이터', fut: '기본(더미) 데이터'};
+  refreshMonths();
+}
+function refreshMonths() { S.months = [...S.flow.keys()].sort(); }
+const segFlows = seg => FLOWS.filter(f => f.seg === seg);
+const segLots = (seg, ym) => segFlows(seg).reduce((a, f) => a + ((S.flow.get(ym) || {})[f.col] || 0), 0);
+const segHr = (seg, ym) => segLots(seg, ym) / daysIn(ym) / 24;
+const segUtil = (seg, ym) => segHr(seg, ym) * S.peak / SEGS.find(s => s.id === seg).cap;
+const fcStartIdx = () => S.months.findIndex(m => S.src.get(m) === 'forecast');
+
+/* ---------------- Chart 공통 ---------------- */
+Chart.defaults.font.family = '"Malgun Gothic","Segoe UI",sans-serif';
+Chart.defaults.font.size = 12;
+const shade = {id: 'shade', beforeDraw(c) {
+  const o = c.options.plugins.shade; if (!o || o.start == null || o.start < 0) return;
+  const x = c.scales.x, a = c.chartArea, step = x.getPixelForValue(1) - x.getPixelForValue(0);
+  const left = x.getPixelForValue(o.start) - step / 2, ctx = c.ctx;
+  ctx.save(); ctx.fillStyle = 'rgba(37,99,235,0.06)'; ctx.fillRect(left, a.top, a.right - left, a.bottom - a.top);
+  ctx.fillStyle = '#4b6fb5'; ctx.font = '11px sans-serif'; ctx.fillText('◀ 이력 | 예측 ▶', left + 4, a.top + 11); ctx.restore();
+}};
+Chart.register(shade);
+const charts = {};
+function mk(id, cfg) {
+  if (charts[id]) charts[id].destroy();
+  cfg.options = Object.assign({responsive: true, maintainAspectRatio: false, interaction: {mode: 'index', intersect: false}}, cfg.options || {});
+  cfg.options.plugins = Object.assign({shade: {start: fcStartIdx()}}, cfg.options.plugins || {});
+  charts[id] = new Chart($(id), cfg); return charts[id];
+}
+const capDS = (label, val, n, color = '#dc2626', dash = [6, 4]) =>
+  ({type: 'line', label, data: Array(n).fill(val), borderColor: color, borderDash: dash, borderWidth: 1.5, pointRadius: 0, fill: false});
+const splitDS = (label, vals, color, start, extra = {}) => ({
+  type: 'line', label, data: vals, borderColor: color, backgroundColor: color, borderWidth: 2, pointRadius: 2, tension: .2,
+  segment: {borderDash: c => c.p0DataIndex >= start - 1 ? [6, 3] : undefined}, ...extra});
+
+/* ---------------- 0. FAB SVG ---------------- */
+function drawFab() {
+  const box = [{l: '16L', x: 36}, {l: '15L', x: 376}, {l: '17L', x: 716}];
+  let s = `<defs><marker id="ar" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" fill="#475569"/></marker></defs>`;
+  box.forEach(b => {
+    s += `<text x="${b.x + 100}" y="40" text-anchor="middle" font-size="18" font-weight="700" fill="#1f3a5f">${b.l}</text>`;
+    s += `<rect x="${b.x}" y="52" width="200" height="105" rx="6" fill="#eaf1fb" stroke="#8aa5cc"/><rect x="${b.x}" y="157" width="200" height="105" rx="6" fill="#dbe6f5" stroke="#8aa5cc"/>`;
+    s += `<text x="${b.x + 10}" y="72" font-size="12" fill="#33415a">상부층</text><text x="${b.x + 10}" y="252" font-size="12" fill="#33415a">하부층</text>`;
+    const sid = 'L' + b.l.slice(0, 2);
+    s += `<line x1="${b.x + 100}" y1="82" x2="${b.x + 100}" y2="232" stroke="#475569" stroke-width="4" marker-start="url(#ar)" marker-end="url(#ar)"/>`;
+    s += `<rect x="${b.x + 40}" y="130" width="120" height="48" rx="6" fill="#fff" stroke="#c5cedb"/>`;
+    s += `<text x="${b.x + 100}" y="148" text-anchor="middle" font-size="12" font-weight="700">Lifter ${b.l}</text>`;
+    s += `<text x="${b.x + 100}" y="163" text-anchor="middle" font-size="11" fill="#5d6b7e">MAX 2,000 Lot/Hr</text>`;
+    s += `<text id="fab-${sid}" x="${b.x + 100}" y="288" text-anchor="middle" font-size="12" font-weight="700"></text>`;
+  });
+  [{id: 'B1516', x1: 236, x2: 376, n: 'Bridge 15-16', c: '4,400'}, {id: 'B1517', x1: 576, x2: 716, n: 'Bridge 15-17', c: '1,750'}].forEach(g => {
+    [105, 210].forEach(y => s += `<line x1="${g.x1 + 4}" y1="${y}" x2="${g.x2 - 4}" y2="${y}" stroke="#475569" stroke-width="5" marker-start="url(#ar)" marker-end="url(#ar)"/>`);
+    const cx = (g.x1 + g.x2) / 2;
+    s += `<text x="${cx}" y="94" text-anchor="middle" font-size="11" fill="#5d6b7e">상부 Bridge</text><text x="${cx}" y="199" text-anchor="middle" font-size="11" fill="#5d6b7e">하부 Bridge</text>`;
+    s += `<text x="${cx}" y="140" text-anchor="middle" font-size="12" font-weight="700">${g.n}</text><text x="${cx}" y="155" text-anchor="middle" font-size="11" fill="#5d6b7e">MAX ${g.c} Lot/Hr</text>`;
+    s += `<text id="fab-${g.id}" x="${cx}" y="288" text-anchor="middle" font-size="12" font-weight="700"></text>`;
+  });
+  $('fab').innerHTML = s;
+}
+function paintFab() {
+  SEGS.forEach(sg => {
+    const m = segSummary(sg.id), el = document.getElementById('fab-' + sg.id); if (!el) return;
+    el.textContent = `예측 최대 ${Math.round(m.max * 100)}% · ${m.label}`;
+    el.setAttribute('fill', m.status === 'bad' ? '#c2262e' : m.status === 'warn' ? '#b45309' : '#15803d');
+  });
+}
+
+/* ---------------- 3. 생산계획/재공 ---------------- */
+let curLine = '전체';
+function renderLineTabs() {
+  $('lineTabs').innerHTML = ['전체', ...LINES].map(l => `<button class="${l === curLine ? 'on' : ''}" data-l="${l}">${l}</button>`).join('');
+  $('lineTabs').querySelectorAll('button').forEach(b => b.onclick = () => { curLine = b.dataset.l; renderPlan(); renderLineTabs(); });
+}
+function renderPlan() {
+  const ms = S.months, rows = S.plan.filter(r => curLine === '전체' || r.line === curLine);
+  const ds = PRODUCTS.map((p, i) => ({type: 'bar', label: p + ' 생산계획', stack: 's', yAxisID: 'y',
+    backgroundColor: PCOL[i], data: ms.map(m => rows.filter(r => r.ym === m && r.prod === p).reduce((a, r) => a + r.plan, 0))}));
+  const wip = ms.map(m => rows.filter(r => r.ym === m).reduce((a, r) => a + r.wip, 0));
+  ds.push({type: 'line', label: '재공(WIP, 월평균)', yAxisID: 'y2', data: wip, borderColor: '#111827', backgroundColor: '#111827', borderWidth: 2, pointRadius: 2, tension: .2,
+    segment: {borderDash: c => c.p0DataIndex >= fcStartIdx() - 1 ? [6, 3] : undefined}});
+  mk('cPlan', {data: {labels: ms, datasets: ds}, options: {
+    scales: {x: {stacked: true, ticks: {maxRotation: 60}}, y: {stacked: true, title: {display: true, text: '생산계획 (Lot/월)'}, ticks: {callback: v => fmt(v)}},
+      y2: {position: 'right', grid: {drawOnChartArea: false}, title: {display: true, text: 'WIP (Lot)'}, ticks: {callback: v => fmt(v)}}},
+    plugins: {tooltip: {callbacks: {label: c => `${c.dataset.label}: ${fmt(c.parsed.y)}`}}}}});
+}
+
+/* ---------------- 4. Summary ---------------- */
+function segSummary(seg) {
+  const fm = S.months.filter(m => S.src.get(m) === 'forecast');
+  const u = fm.map(m => segUtil(seg, m));
+  const max = u.length ? Math.max(...u) : 0, mi = u.indexOf(max);
+  const ex = fm.filter((m, i) => u[i] > 1), wr = fm.filter((m, i) => u[i] >= .9);
+  const status = ex.length ? 'bad' : (wr.length ? 'warn' : 'ok');
+  return {max, maxMonth: fm[mi], firstExceed: ex[0], firstWarn: wr[0], exCount: ex.length, wrCount: wr.length, status,
+    label: status === 'bad' ? '초과' : status === 'warn' ? '주의' : '정상', total: fm.length};
+}
+function hmColor(u) { return u > 1 ? ['#e5484d', '#fff'] : u > .9 ? ['#f6a25a', '#1b2430'] : u > .8 ? ['#fbe39b', '#1b2430'] : u > .7 ? ['#bcd6f5', '#1b2430'] : ['#e6f0fb', '#1b2430']; }
+function renderSummary() {
+  const sums = SEGS.map(s => ({s, m: segSummary(s.id)}));
+  const bad = sums.filter(x => x.m.status === 'bad');
+  const fmL = S.months.filter(m => S.src.get(m) === 'forecast');
+  const range = fmL.length ? `${fmL[0]} ~ ${fmL[fmL.length - 1]}` : '-';
+  if (bad.length) {
+    const first = bad.slice().sort((a, b) => a.m.firstExceed.localeCompare(b.m.firstExceed))[0];
+    $('alert').innerHTML = `<div class="alert bad"><b>⚠ MAX CAPA 초과 예상 — ${bad.length}개 구간</b> (예측기간 ${range}, 피크계수 ${S.peak.toFixed(2)})
+      <ul>${bad.map(x => `<li><b>${x.s.name}</b>: 최초 초과 <b>${x.m.firstExceed}</b> · 초과 ${x.m.exCount}개월 · 최대 ${pct(x.m.max)} (${x.m.maxMonth}) — CAPA ${fmt(x.s.cap)} Lot/Hr</li>`).join('')}</ul>
+      <div style="margin-top:6px">가장 빠른 초과 시점: <b>${first.m.firstExceed}</b> (${first.s.name}). 해당 시점 이전 Lifter/Bridge 증설·물류 분산(라인 간 이동 경로 조정) 검토가 필요합니다.</div></div>`;
+  } else {
+    $('alert').innerHTML = `<div class="alert ok"><b>✔ 예측기간(${range}) 중 MAX CAPA를 초과하는 구간이 없습니다.</b> (피크계수 ${S.peak.toFixed(2)})</div>`;
+  }
+  $('segCards').innerHTML = sums.map(({s, m}) => `<div class="seg ${m.status}">
+    <div class="t">${s.name}<span class="badge b-${m.status}">${m.label}</span></div>
+    <div class="big">${pct(m.max)}</div>
+    <div class="bar"><i style="width:${Math.min(m.max * 100, 100)}%;background:${m.status === 'bad' ? '#dc2626' : m.status === 'warn' ? '#d97706' : '#16a34a'}"></i></div>
+    <div class="kv"><span>MAX CAPA</span><b>${fmt(s.cap)} Lot/Hr</b></div>
+    <div class="kv"><span>최대 부하 시점</span><b>${m.maxMonth || '-'}</b></div>
+    <div class="kv"><span>최초 초과</span><b style="color:${m.firstExceed ? '#c2262e' : 'inherit'}">${m.firstExceed || '없음'}</b></div>
+    <div class="kv"><span>주의(≥90%) 시작</span><b>${m.firstWarn || '없음'}</b></div>
+    <div class="kv"><span>초과 개월 수</span><b>${m.exCount} / ${m.total}</b></div></div>`).join('');
+  const fs = fcStartIdx();
+  let h = `<tr><th></th>${S.months.map((m, i) => `<th class="${i >= fs ? 'fc' : ''}">${m.slice(2).replace('-', '.')}</th>`).join('')}</tr>`;
+  SEGS.forEach(s => {
+    h += `<tr><td class="nm">${s.name}</td>` + S.months.map((m, i) => {
+      const u = segUtil(s.id, m), [bg, fg] = hmColor(u);
+      return `<td style="background:${bg};color:${fg};${i === fs ? 'border-left:3px solid #1f3a5f;' : ''}" title="${m} ${fmt(segHr(s.id, m))} Lot/Hr">${Math.round(u * 100)}</td>`;
+    }).join('') + '</tr>';
+  });
+  $('heat').innerHTML = h;
+  paintFab();
+}
+
+/* ---------------- 5. 물동량 ---------------- */
+function renderFlows() {
+  const box = $('flowCharts'); box.innerHTML = SEGS.map(s => `<div class="card"><h3>${s.name} <span class="note">MAX ${fmt(s.cap)} Lot/Hr</span></h3><div class="ch sm"><canvas id="cf-${s.id}"></canvas></div></div>`).join('');
+  const ms = S.months, fs = fcStartIdx();
+  SEGS.forEach(s => {
+    const v = ms.map(m => +segHr(s.id, m).toFixed(1));
+    mk('cf-' + s.id, {data: {labels: ms, datasets: [splitDS('물동량(Lot/Hr)', v, SCOL[s.id], fs, {fill: false}), capDS('MAX CAPA', s.cap, ms.length)]},
+      options: {scales: {x: {ticks: {maxRotation: 60, autoSkip: true, maxTicksLimit: 12}}, y: {suggestedMin: 0, suggestedMax: s.cap * 1.15, ticks: {callback: v => fmt(v)}}},
+        plugins: {legend: {display: false}, tooltip: {callbacks: {label: c => `${c.dataset.label}: ${fmt(c.parsed.y)}`}}}}});
+  });
+}
+
+/* ---------------- 6. 방향별 ---------------- */
+const DCOL = ['#2563eb', '#93b4f2', '#d97706', '#f5c27a'];
+function renderDir() {
+  const seg = $('dirSeg').value, grp = $('dirGrp').value, unit = $('dirUnit').value, ms = S.months;
+  const fl = segFlows(seg);
+  let groups;
+  if (grp === 'dirfloor') groups = fl.map(f => ({name: `${f.dir} ${f.floor === '층간' ? '' : f.floor}`.trim(), cols: [f.col]}));
+  else { const dirs = [...new Set(fl.map(f => f.dir))]; groups = dirs.map(d => ({name: d, cols: fl.filter(f => f.dir === d).map(f => f.col)})); }
+  const val = (cols, m) => { const t = cols.reduce((a, c) => a + ((S.flow.get(m) || {})[c] || 0), 0); return unit === 'hr' ? +(t / daysIn(m) / 24).toFixed(1) : t; };
+  const ds = groups.map((g, i) => ({type: 'bar', label: g.name, stack: 's', backgroundColor: DCOL[i % 4], data: ms.map(m => val(g.cols, m))}));
+  const cap = SEGS.find(s => s.id === seg).cap;
+  if (unit === 'hr') ds.push(capDS('MAX CAPA', cap, ms.length));
+  mk('cDir', {data: {labels: ms, datasets: ds}, options: {
+    scales: {x: {stacked: true, ticks: {maxRotation: 60}}, y: {stacked: true, title: {display: true, text: unit === 'hr' ? 'Lot/Hr (월평균)' : 'Lot/월'}, ticks: {callback: v => fmt(v)}}},
+    plugins: {tooltip: {callbacks: {label: c => `${c.dataset.label}: ${fmt(c.parsed.y)}`}}}}});
+}
+
+/* ---------------- 7. Matrix ---------------- */
+const NODES = ['16L 상부', '16L 하부', '15L 상부', '15L 하부', '17L 상부', '17L 하부'];
+function renderMatrix() {
+  const a = $('mxA').value, b = $('mxB').value, unit = $('mxUnit').value;
+  const ms = S.months.filter(m => m >= a && m <= b);
+  const hrs = ms.reduce((t, m) => t + daysIn(m) * 24, 0);
+  const M = {}; NODES.forEach(f => NODES.forEach(t => M[f + '>' + t] = 0));
+  FLOWS.forEach(f => { M[f.from + '>' + f.to] += ms.reduce((t, m) => t + ((S.flow.get(m) || {})[f.col] || 0), 0); });
+  const v = k => unit === 'hr' ? M[k] / hrs : M[k];
+  const vals = Object.keys(M).map(k => v(k)).filter(x => x > 0), mx = Math.max(...vals, 1);
+  const cell = x => x > 0 ? `<td style="background:rgba(37,99,235,${(0.12 + 0.78 * x / mx).toFixed(2)});color:${x / mx > .55 ? '#fff' : '#1b2430'}">${fmt(x)}</td>` : `<td style="background:#f3f5f9;color:#a0aab8">-</td>`;
+  let h = `<tr><th>FROM ＼ TO</th>${NODES.map(n => `<th>${n}</th>`).join('')}<th>합계(OUT)</th></tr>`;
+  NODES.forEach(f => {
+    h += `<tr><th>${f}</th>` + NODES.map(t => cell(v(f + '>' + t))).join('') + `<th>${fmt(NODES.reduce((s, t) => s + v(f + '>' + t), 0))}</th></tr>`;
+  });
+  h += `<tr><th>합계(IN)</th>${NODES.map(t => `<th>${fmt(NODES.reduce((s, f) => s + v(f + '>' + t), 0))}</th>`).join('')}<th>${fmt(Object.keys(M).reduce((s, k) => s + v(k), 0))}</th></tr>`;
+  $('mx').innerHTML = h;
+  const srcs = [...new Set(ms.map(m => S.src.get(m)))].map(x => x === 'actual' ? '이력' : '예측').join('+');
+  $('mxNote').textContent = `기간 ${a} ~ ${b} (${ms.length}개월, ${srcs}) · 단위: ${unit === 'hr' ? '평균 Lot/Hr' : '기간 합계 Lot'}`;
+}
+
+/* ---------------- 8. 부하율 ---------------- */
+function renderUtil() {
+  const ms = S.months, fs = fcStartIdx();
+  const ds = SEGS.map(s => splitDS(s.name, ms.map(m => +(segUtil(s.id, m) * 100).toFixed(1)), SCOL[s.id], fs));
+  ds.push(capDS('100% (MAX CAPA)', 100, ms.length), capDS('90% 주의선', 90, ms.length, '#d97706', [3, 3]));
+  mk('cUtil', {data: {labels: ms, datasets: ds}, options: {scales: {x: {ticks: {maxRotation: 60}}, y: {title: {display: true, text: '부하율 (%)'}, suggestedMin: 40}},
+    plugins: {tooltip: {callbacks: {label: c => `${c.dataset.label}: ${c.parsed.y}%`}}}}});
+}
+
+/* ---------------- 9. Raw Data ---------------- */
+let rawRows = [], rawCols = [];
+function renderRaw() {
+  const set = $('rwSet').value, src = $('rwSrc').value, a = $('rwA').value, b = $('rwB').value;
+  $('rwSegL').style.display = set === 'flow' ? '' : 'none'; $('rwLineL').style.display = set === 'plan' ? '' : 'none';
+  const inR = m => m >= a && m <= b && (!src || S.src.get(m) === src);
+  if (set === 'flow') {
+    const seg = $('rwSeg').value;
+    rawCols = ['년월', '구분', '구간유형', '구간', '방향', '층', 'FROM', 'TO', '물동량(Lot/월)', '물동량(Lot/Hr)'];
+    rawRows = [];
+    S.months.filter(inR).forEach(m => FLOWS.filter(f => !seg || f.seg === seg).forEach(f => {
+      const t = (S.flow.get(m) || {})[f.col] || 0;
+      rawRows.push({'년월': m, '구분': S.src.get(m) === 'actual' ? '이력' : '예측', '구간유형': f.type, '구간': f.segname, '방향': f.dir, '층': f.floor,
+        'FROM': f.from, 'TO': f.to, '물동량(Lot/월)': t, '물동량(Lot/Hr)': +(t / daysIn(m) / 24).toFixed(1)});
+    }));
+  } else {
+    const ln = $('rwLine').value;
+    rawCols = ['년월', '구분', '라인', '제품', '생산계획(Lot/월)', '재공(WIP, Lot)'];
+    rawRows = S.plan.filter(r => inR(r.ym) && (!ln || r.line === ln)).sort((x, y) => x.ym.localeCompare(y.ym) || x.line.localeCompare(y.line) || x.prod.localeCompare(y.prod))
+      .map(r => ({'년월': r.ym, '구분': r.src === 'actual' ? '이력' : '예측', '라인': r.line, '제품': r.prod, '생산계획(Lot/월)': r.plan, '재공(WIP, Lot)': r.wip}));
+  }
+  const show = rawRows.slice(0, 300);
+  $('rwT').innerHTML = `<thead><tr>${rawCols.map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>` +
+    show.map(r => `<tr>${rawCols.map((c, i) => `<td class="${typeof r[c] === 'string' ? 'l' : ''}">${typeof r[c] === 'number' ? fmt(r[c]).replace(/^(-?\d+)$/, '$1') : r[c]}</td>`).join('')}</tr>`).join('') + '</tbody>';
+  $('rwCnt').textContent = `${fmt(rawRows.length)}행 ${rawRows.length > 300 ? '(화면은 300행까지, Excel에는 전체 포함)' : ''}`;
+}
+function downloadRaw() {
+  const ws = XLSX.utils.json_to_sheet(rawRows, {header: rawCols}), wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, $('rwSet').value === 'flow' ? '물동량' : '생산계획_재공');
+  XLSX.writeFile(wb, `H23_RawData_${$('rwSet').value}_${$('rwA').value}_${$('rwB').value}.xlsx`);
+}
+
+/* ---------------- ML 요약 ---------------- */
+function renderML() {
+  const M = D.models, sel = M.selected, w = M.weights, rk = M.ranking;
+  const tgt = 95, ok = M.ens_month_acc >= tgt;
+  const eng = S.engine === 'ensemble' ? `선정 3개 모델 가중 앙상블` : `Ridge 단일 모델(업로드 계획 재예측)`;
+  const segAcc = SEGS.map(s => `<tr><td class="l">${s.name}</td><td>${M.seg_acc[s.id].toFixed(2)}%</td></tr>`).join('');
+  $('mlSummary').innerHTML = `
+  <p class="desc">후보 ${rk.length}종(${rk.map(r => r.model).join(', ')})을 26.1~10 일별 이력(${M.n_train_days}일, 입력 ${M.n_features}개: 라인×제품 생산계획 / 출력 ${M.n_targets}개: 구간·방향·층별 물동량)으로 학습하고,
+  <b>확장 윈도우 시계열 교차검증</b>(1~k월 학습 → k+1월 예측, k=5~9)으로 성능을 비교해 <b>상위 ${sel.length}개</b>를 예측에 사용했습니다. 정확도 = 100% − 월 합계 기준 MAPE.</p>
+  <div class="kpi">
+    <div><span>예측 앙상블 교차검증 정확도 (목표 ≥ ${tgt}%)</span><b style="color:${ok ? '#15803d' : '#c2262e'}">${M.ens_month_acc.toFixed(2)}%</b><span class="badge ${ok ? 'b-ok' : 'b-bad'}">${ok ? '목표 달성' : '목표 미달'}</span></div>
+    <div><span>현재 예측 방식</span><b style="font-size:16px;padding-top:6px">${eng}</b></div>
+    <div><span>학습 데이터</span><b style="font-size:16px;padding-top:6px">2026.01~10 · ${M.n_train_days}일</b></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><h3>선정 모델 (예측에 사용)</h3>
+      <table class="t"><thead><tr><th class="l">모델</th><th>앙상블 가중치</th><th>월합계 정확도(CV)</th><th>일별 MAPE</th><th>일별 R²</th></tr></thead><tbody>
+      ${sel.map(n => { const r = rk.find(x => x.model === n); return `<tr class="sel"><td class="l"><b>${n}</b></td><td>${(w[n] * 100).toFixed(1)}%</td><td>${r.month_acc.toFixed(2)}%</td><td>${r.daily_mape.toFixed(2)}%</td><td>${r.daily_r2.toFixed(3)}</td></tr>`; }).join('')}
+      </tbody></table>
+      <ul class="note" style="padding-left:18px;margin:10px 0 0">${sel.map(n => `<li><b>${n}</b>: ${M.desc[n] || ''}</li>`).join('')}</ul></div>
+    <div class="card"><h3>후보 모델 전체 비교 (월합계 정확도, CV)</h3><div class="ch sm"><canvas id="cMl"></canvas></div></div>
+  </div>
+  <div class="grid2" style="margin-top:14px">
+    <div class="card"><h3>앙상블 구간별 월 정확도 (CV 평균)</h3><table class="t"><thead><tr><th class="l">구간</th><th>정확도</th></tr></thead><tbody>${segAcc}</tbody></table></div>
+    <div class="card"><h3>검증 월별 앙상블 정확도</h3><div class="ch sm"><canvas id="cFold"></canvas></div></div>
+  </div>
+  <p class="note" style="margin-top:12px">※ 유의사항: ① 본 수치는 더미 데이터 기준이며, 실데이터 적용 시 재학습·재검증이 필요합니다. ② 27~28년 계획은 26년 물량·제품믹스를 벗어나므로(외삽), 트리 계열은 총계획 대비 비율을 학습하는 물량 정규화를 적용했습니다. 그래도 제품 믹스 변화가 이력 범위를 크게 벗어나면 오차가 커질 수 있으므로 실적 누적 시 주기적 재학습을 권장합니다.
+  ③ 신제품 전환 시 이력이 없으므로 기존 제품(제품E 포함)의 이동 패턴을 활용합니다. ④ 업로드한 계획의 재예측은 브라우저 내 Ridge 모델로 수행되며, 모델 재학습은 <code>train_predict.py</code>를 실행하세요.</p>`;
+  mk('cMl', {type: 'bar', data: {labels: rk.map(r => r.model), datasets: [{label: '월합계 정확도(%)', data: rk.map(r => +r.month_acc.toFixed(2)),
+      backgroundColor: rk.map(r => sel.includes(r.model) ? '#1f3a5f' : '#b7c3d6')}, capDS(`목표 ${tgt}%`, tgt, rk.length)]},
+    options: {indexAxis: 'x', scales: {y: {min: Math.max(0, Math.floor(Math.min(...rk.map(r => r.month_acc)) - 3)), max: 100, title: {display: true, text: '정확도(%)'}}}, plugins: {shade: {start: null}, legend: {display: false}}}});
+  mk('cFold', {type: 'bar', data: {labels: M.folds.map(m => `2026-${String(m).padStart(2, '0')}`), datasets: [{label: '앙상블 정확도(%)', data: M.ens_fold_acc.map(v => +v.toFixed(2)), backgroundColor: '#2563eb'}, capDS(`목표 ${tgt}%`, tgt, M.folds.length)]},
+    options: {scales: {y: {min: Math.max(0, Math.floor(Math.min(...M.ens_fold_acc) - 3)), max: 100}}, plugins: {shade: {start: null}, legend: {display: false}}}});
+}
+
+/* ---------------- 업로드 처리 ---------------- */
+const readWb = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = e => res(XLSX.read(e.target.result, {type: 'array'})); r.onerror = rej; r.readAsArrayBuffer(f); });
+function toYM(v) {
+  if (v == null || v === '') return null;
+  if (typeof v === 'number') { if (v > 20000) { const d = new Date(Math.round((v - 25569) * 86400000)); return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0'); } return null; }
+  if (v instanceof Date) return v.getFullYear() + '-' + String(v.getMonth() + 1).padStart(2, '0');
+  const m = String(v).match(/(\d{4})\D?(\d{1,2})/); return m ? m[1] + '-' + m[2].padStart(2, '0') : null;
+}
+function wipEst(line, prod, plan, ym) { return Math.round(plan / daysIn(ym) * (D.wip_ratio[line + '|' + prod] || 0)); }
+function ridgePredict(planRows) {
+  const byM = {}; planRows.forEach(r => { (byM[r.ym] = byM[r.ym] || {})[r.line + '|' + r.prod] = (byM[r.ym][r.line + '|' + r.prod] || 0) + r.plan; });
+  const out = {};
+  Object.keys(byM).sort().forEach(ym => {
+    const nd = daysIn(ym), x = FEATS.map(f => (byM[ym][f] || 0) / nd);
+    out[ym] = D.ridge.intercept.map((b, t) => Math.max(0, Math.round((b + D.ridge.coef[t].reduce((s, c, j) => s + c * x[j], 0)) * nd)));
+  });
+  return out;
+}
+async function onPlan(file) {
+  try {
+    const wb = await readWb(file), ws = wb.Sheets['월별_생산계획'] || wb.Sheets[wb.SheetNames.find(n => { const r = XLSX.utils.sheet_to_json(wb.Sheets[n]); return r[0] && r[0]['년월'] != null; })];
+    if (!ws) throw new Error('"년월/라인/제품/생산계획(Lot)" 컬럼을 가진 시트를 찾을 수 없습니다.');
+    const rows = XLSX.utils.sheet_to_json(ws).map(r => ({ym: toYM(r['년월']), line: String(r['라인']).trim(), prod: String(r['제품']).trim(), plan: Number(r['생산계획(Lot)'])}))
+      .filter(r => r.ym && LINES.includes(r.line) && PRODUCTS.includes(r.prod) && isFinite(r.plan));
+    if (!rows.length) throw new Error('유효한 행이 없습니다 (라인: 15L/16L/17L, 제품: 제품A~E).');
+    const pred = ridgePredict(rows);
+    [...S.flow.keys()].forEach(m => { if (S.src.get(m) === 'forecast') { S.flow.delete(m); S.src.delete(m); } });
+    S.plan = S.plan.filter(r => r.src === 'actual');
+    Object.keys(pred).forEach(ym => { const o = {}; COLS.forEach((c, i) => o[c] = pred[ym][i]); S.flow.set(ym, o); S.src.set(ym, 'forecast'); });
+    rows.forEach(r => S.plan.push({ym: r.ym, line: r.line, prod: r.prod, plan: Math.round(r.plan), wip: wipEst(r.line, r.prod, r.plan, r.ym), src: 'forecast'}));
+    S.engine = 'ridge'; S.fut = `${file.name} (${Object.keys(pred).length}개월)`; refreshMonths(); renderAll();
+  } catch (e) { $('stPlan').innerHTML = `<span style="color:#c2262e">업로드 실패: ${e.message}</span>`; }
+}
+async function onHist(file) {
+  try {
+    const wb = await readWb(file);
+    const pr = XLSX.utils.sheet_to_json(wb.Sheets['일별_생산계획_WIP'] || {}), fr = XLSX.utils.sheet_to_json(wb.Sheets['일별_물동량'] || {});
+    if (!pr.length || !fr.length) throw new Error('시트 "일별_생산계획_WIP", "일별_물동량"이 필요합니다.');
+    const agg = {}; fr.forEach(r => { const ym = toYM(r['일자']); if (!ym) return; const o = agg[ym] = agg[ym] || {}; COLS.forEach(c => o[c] = (o[c] || 0) + (Number(r[c]) || 0)); });
+    const miss = COLS.filter(c => !(c in fr[0])); if (miss.length) throw new Error('물동량 컬럼 누락: ' + miss.slice(0, 3).join(', ') + (miss.length > 3 ? ' 외' : ''));
+    const pa = {}, dset = {};
+    pr.forEach(r => { const ym = toYM(r['일자']); if (!ym) return; const k = ym + '|' + r['라인'] + '|' + r['제품'], o = pa[k] = pa[k] || {ym, line: r['라인'], prod: r['제품'], plan: 0, wip: 0, n: 0};
+      o.plan += Number(r['생산계획(Lot)']) || 0; o.wip += Number(r['재공(WIP,Lot)']) || 0; o.n++; });
+    [...S.flow.keys()].forEach(m => { if (S.src.get(m) === 'actual') { S.flow.delete(m); S.src.delete(m); } });
+    Object.keys(agg).forEach(ym => { S.flow.set(ym, agg[ym]); S.src.set(ym, 'actual'); });
+    S.plan = S.plan.filter(r => r.src === 'forecast').concat(Object.values(pa).map(o => ({ym: o.ym, line: o.line, prod: o.prod, plan: Math.round(o.plan), wip: Math.round(o.wip / o.n), src: 'actual'})));
+    S.hist = `${file.name} (${Object.keys(agg).length}개월)`; refreshMonths(); renderAll();
+  } catch (e) { $('stHist').innerHTML = `<span style="color:#c2262e">업로드 실패: ${e.message}</span>`; }
+}
+
+/* ---------------- 초기화/렌더 ---------------- */
+function fillSelects() {
+  const mo = S.months, opt = (a, sel) => a.map(m => `<option ${m === sel ? 'selected' : ''}>${m}</option>`).join('');
+  const keep = id => $(id).value;
+  const set = (id, list, def) => { const v = keep(id); $(id).innerHTML = opt(list, list.includes(v) ? v : def); };
+  const fm = mo.filter(m => S.src.get(m) === 'forecast');
+  set('mxA', mo, fm[0] || mo[0]); set('mxB', mo, fm.find(m => m.endsWith('-12')) || mo[mo.length - 1]);
+  set('rwA', mo, mo[0]); set('rwB', mo, mo[mo.length - 1]);
+  if (!$('dirSeg').options.length) $('dirSeg').innerHTML = SEGS.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+  if (!$('rwSeg').options.length) $('rwSeg').innerHTML = '<option value="">전체 구간</option>' + SEGS.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+  if (!$('rwLine').options.length) $('rwLine').innerHTML = '<option value="">전체 라인</option>' + LINES.map(l => `<option>${l}</option>`).join('');
+}
+function renderStatus() {
+  $('stHist').innerHTML = `적용 중: <span class="pill">${S.hist}</span>`;
+  $('stPlan').innerHTML = `적용 중: <span class="pill">${S.fut}</span>`;
+  $('engineNote').innerHTML = S.engine === 'ensemble' ? '예측 엔진: ML 상위 3개 모델 가중 앙상블 (하단 성능 요약 참조)'
+    : '<b style="color:#b45309">예측 엔진: 업로드한 계획을 Ridge 선형모델로 재예측한 결과입니다.</b> (3개 모델 앙상블 재계산은 train_predict.py 실행 필요)';
+}
+function renderAll() {
+  S.peak = Math.max(0.5, +$('peak').value || 1);
+  fillSelects(); renderStatus(); renderPlan(); renderSummary(); renderFlows(); renderDir(); renderMatrix(); renderUtil(); renderRaw(); renderML();
+}
+drawFab(); initState(); renderLineTabs(); renderAll();
+$('peak').onchange = renderAll; $('reset').onclick = () => { $('fHist').value = ''; $('fPlan').value = ''; initState(); renderAll(); };
+$('fHist').onchange = e => e.target.files[0] && onHist(e.target.files[0]);
+$('fPlan').onchange = e => e.target.files[0] && onPlan(e.target.files[0]);
+['dirSeg', 'dirGrp', 'dirUnit'].forEach(i => $(i).onchange = renderDir);
+['mxA', 'mxB', 'mxUnit'].forEach(i => $(i).onchange = renderMatrix);
+['rwSet', 'rwSrc', 'rwSeg', 'rwLine', 'rwA', 'rwB'].forEach(i => $(i).onchange = renderRaw);
+$('rwDl').onclick = downloadRaw;
+</script>
+</body>
+</html>
